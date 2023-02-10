@@ -11,13 +11,17 @@
 		Textures - Textures are arrays of data you can randomly acces in your shader program.  
 		Varying - are way for a vertex shader to pass data to the fragmentShader.
 		-->
+		<button id="triangles">Triangles</button>
+		<button id="triangle_strip">Triangle Strip</button>
+		<button id="triangle_fan">Triangle Fan</button>
 		<script id="2dVertexShader" type="notjs">
 		attribute vec4 a_position;
 		attribute vec3 a_color;
 		varying vec3 v_color;
 		void main()
-		{
+		{	
 			v_color = a_color;
+			//last thing in vertex shader
 			gl_Position=a_position;
 		}		
 		</SCRIPT>
@@ -82,17 +86,17 @@
 				//Find the position attribute location in the program
 				//2nd create a position buffer
 				//3rd create a 
-				var positions = [
-				0, 		0,		0.2,	0.0, 0.0, 1.0,
-				0, 		0.5,	-0.2,	0.0, 0.0, 1.0,
-				0.7, 	0,		0.5,	0.0, 0.0, 1.0,
-
-				0, 		0,		0.4,	0.0, 1.0, 0.0,
-				0, 		1,	-0.4,	0.0, 1.0, 0.0,
-				0.7, 	0,		1,	0.0, 1.0, 0.0,
-
-			
-			   ];
+				var positions = 
+			[	//x, 	y, 		z,		r,		g,		b,
+				1, 		1,		0.2,	0,		1,		0,	
+				0, 		0,	-0.2,	1,		0,		0,
+				1, 	0,		0.5,	0,		0,		1,
+				//first, second and right vert
+				-1, 		1,		0.2,	0,		1,		0,	
+				0, 		1,	-0.2,	1,		0,		0,
+				-1, 	0,		0.5,	0,		0,		1,
+				
+		    ];
 			   //Create a position buffer
 			   this.positionBuffer = gl.createBuffer();
 			   //Bind "ARRAY_BUFFER type to the positionBuffer
@@ -101,7 +105,7 @@
 					//last bound buffer is where data is sent
 			   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
 			}
-			render(program)
+			render(program,primType)
 			{
 				//Now we have to find the attribute position in the program --- think of this as a pointer
 				var positionAttributeLocation = gl.getAttribLocation(program, "a_position");
@@ -114,31 +118,35 @@
 				
 				gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer);
 				//Tell the attribute how to get sata out of positionBuffer (ARRAY_BUFFER)
-				var size = 3; // 2 components per iteration
+				var size = 3; // 3 components per vertice
 				var type = gl.FLOAT; //the data is 32bit floats
 				var normalize = false; //dont normalize the data
 				var stride = 6*Float32Array.BYTES_PER_ELEMENT; //0 = move forward * sizeof (Type) each iteration to get the next position
-				var offset = 0; //start at beginning of buffer
+				var offset = 0*Float32Array.BYTES_PER_ELEMENT; //start at beginning of buffer
 				//KNOW THIS !!!!!
 				gl.vertexAttribPointer(positionAttributeLocation, size,
 				type, normalize, stride, offset)
-
+				
 				var colorAttributeLocation = gl.getAttribLocation(program, "a_color");
-				//now we specify HOW TO read our vertices
 				gl.enableVertexAttribArray(colorAttributeLocation);
+				gl.vertexAttribPointer
+				(
+				colorAttributeLocation,
+				3,
+				gl.FLOAT,
+				false,
+				6*Float32Array.BYTES_PER_ELEMENT,
+				3*Float32Array.BYTES_PER_ELEMENT
+				)
+				
+				var primitiveType = primType;
 
-				var stride = 6*Float32Array.BYTES_PER_ELEMENT;
-				var offset = 3*Float32Array.BYTES_PER_ELEMENT;
-
-				gl.vertexAttribPointer(colorAttributeLocation, 3,
-				type, normalize, stride, offset)
-
-
-				var primitiveType = gl.TRIANGLES;
 				var offset = 0;
 				var count = 6;
+				//primitiveType should be coming from main
 				gl.drawArrays(primitiveType, offset, count);
 			}
+			
 		}
 		
 		
@@ -153,14 +161,20 @@
 				var fragmentShader = this.webGL.createShader(gl.FRAGMENT_SHADER, fragmentShaderSource);
 				//link to program
 				this.program = this.webGL.createProgram(vertexShader,fragmentShader);
+				this.primType = gl.TRIANGLES;
 				//what program to use
 				gl.useProgram(this.program);
-				var temp = new Shape();
-				temp.render(this.program);
+				this.temp = new Shape();
 				
+				this.temp.render(this.program, this.primType);
+				
+			}
 			
-			}	
+				
 		}
+
+		
+
 		</script>
 	</Head>
 	<BODY>
@@ -180,6 +194,33 @@
 			var gl = canvas.getContext("webgl");
 			
 			var m = new main();
+			
+			document.getElementById("triangles").addEventListener("click", myFunction);
+			document.getElementById("triangle_strip").addEventListener("click", myFunction1);
+			document.getElementById("triangle_fan").addEventListener("click", myFunction2);
+			function myFunction(){
+				console.log("clicked");
+				m.primType = gl.TRIANGLES;
+				m.temp.render(m.program, m.primType)
+					
+					
+			}
+
+			function myFunction1(){
+				console.log("clicked2");
+				m.primType = gl.TRIANGLE_STRIP;
+				m.temp.render(m.program, m.primType)
+					
+					
+			}
+
+			function myFunction2(){
+				console.log("clicked3");
+				m.primType = gl.TRIANGLE_FAN;
+				m.temp.render(m.program, m.primType)
+					
+					
+			}
 		</SCRIPT>		
 	</BODY>
 </HTML>
