@@ -1,0 +1,279 @@
+<!DOCTYPE HTML>
+<HTML lang="en">
+	<Head>
+	<Title>"Welcome TO WEB_GL Shaders"</TITLE>
+		
+		<!-- 
+		GLSL is the language used for shaders (GL Shader Language)
+		Attribute - you specify how to pull the data out of the buffers you supply.
+		Buffers - Data loaded onto the GPU (Normally vertex information)
+		Uniforms - global variables (in GLSL) that you set before you run the shader program
+		Textures - Textures are arrays of data you can randomly acces in your shader program.  
+		Varying - are way for a vertex shader to pass data to the fragmentShader.
+		-->
+		<button id="triangles">Triangles</button>
+		<button id="triangle_strip">Triangle Strip</button>
+		<button id="triangle_fan">Triangle Fan</button>
+		<script id="2dVertexShader" type="notjs">
+		attribute vec4 a_position;
+		attribute vec3 a_color;
+		varying vec3 v_color;
+		void main()
+		{	
+			v_color = a_color;
+			//last thing in vertex shader
+			gl_Position=a_position;
+		}		
+		</SCRIPT>
+		
+		<script id="2dFragmentShader" type="notjs">
+		//Fragment shaders do not have precision so we have to set it.
+		precision mediump float;
+		varying vec3 v_color;
+		void main()
+		{
+			gl_FragColor = vec4(v_color,1); // between 0 and 1
+		}
+		</script>
+		
+		<script>
+		class InitWebGLProgram
+		{
+			constructor()
+			{
+				//setup our veiwport
+				gl.viewport(0,0, gl.canvas.width, gl.canvas.height);
+				//set clear colors RGBA, .5 = 128 in RGB
+				gl.clearColor(1,1,1,1);
+				gl.clear(gl.COLOR_BUFFER_BIT);
+			}
+			createShader(type,source)
+			{
+				var shader = gl.createShader(type)
+				gl.shaderSource(shader,source);
+				gl.compileShader(shader);
+				var success = gl.getShaderParameter(shader,gl.COMPILE_STATUS);
+				if(success) 
+				{
+					return shader;
+				}
+				//else it didnt work
+				console.error(gl.getShaderInfoLog(shader));
+				gl.deleteShader(shader);
+			}
+			
+			createProgram(vs,fs)
+			{
+				var program = gl.createProgram();
+				gl.attachShader(program,vs);
+				gl.attachShader(program, fs);
+				gl.linkProgram(program);
+				var success = gl.getProgramParameter(program,gl.LINK_STATUS);
+				if(success)
+				{
+					return program;
+				}
+				console.error(gl.getProgramInfoLog(program));
+				gl.deleteProgram(program);
+			}
+		}
+	
+		class Shape
+		{
+			constructor()
+			{
+				//*Now we have to explain to GLSL how to interprate our data*/
+				//Find the position attribute location in the program
+				//2nd create a position buffer
+				//3rd create a 
+				var positions = 
+			[	//x, 	y, 		z,		r,		g,		b,
+  // Left vertical bar
+  -0.9, 0.0, 0.0, 1.0, 0.0, 0.0,
+  -1, 0, 0.0, 1.0, 0.0, 0.0,
+  -1.0, 1, 0.0, 1.0, 0.0, 0.0,
+  
+  -0.9, 1.0, 0.0, 1.0, 0.0, 0.0,
+  -1, 1, 0.0, 1.0, 0.0, 0.0,
+  -0.9, 0, 0.0, 1.0, 0.0, 0.0,
+
+  -0.9, 1.0, 0.0, 1.0, 0.0, 0.0,
+  -1, 1, 0.0, 1.0, 0.0, 0.0,
+  -0.5, 0, 0.0, 1.0, 0.0, 0.0,
+  
+  -0.5, 0.0, 0.0, 1.0, 0.0, 0.0,
+  -0.6, 0.0, 0.0, 1.0, 0.0, 0.0,
+  -1, 1.0, 0.0, 1.0, 0.0, 0.0,
+
+  -0.5, 0, 0.0, 1.0, 0.0, 0.0,
+  -0.6, 0, 0.0, 1.0, 0.0, 0.0,
+  -0.5, 1, 0.0, 1.0, 0.0, 0.0,
+  
+  -0.5, 1, 0.0, 1.0, 0.0, 0.0,
+  -0.6, 1.0, 0.0, 1.0, 0.0, 0.0,
+  -0.6, 0.0, 0.0, 1.0, 0.0, 0.0,
+
+  -0.4, 1, 0.0, 0.0, 1.0, 0.0,
+  0.1, 1.0, 0.0, 0.0, 1.0, 0.0,
+  0.1, 0.8, 0.0, 0.0, 1.0, 0.0,
+
+  0.1, 0.2, 0.0, 0.0, 1.0, 0.0,
+  -0.3, 1.0, 0.0, 0.0, 1.0, 0.0,
+  -0.4, 1, 0.0, 0.0, 1.0, 0.0,
+  
+  -0.4, 1, 0.0, 0.0, 1.0, 0.0,
+  0.1, 0.2, 0.0, 0.0, 1.0, 0.0,
+  -0.1, 0.2, 0.0, 0.0, 1.0, 0.0,
+
+  -0.4, 0, 0.0, 0.0, 1.0, 0.0,
+  0.1, 0.2, 0.0, 0.0, 1.0, 0.0,
+  -0.1, 0.2, 0.0, 0.0, 1.0, 0.0,
+
+  0.2, 0, 0.0, 0.0, 0.0, 1.0,
+  0.3, 1, 0.0, 0.0, 0.0, 1.0,
+  0.2, 1, 0.0, 0.0, 0.0, 1.0,
+
+  0.3, 1, 0.0, 0.0, 0.0, 1.0,
+  0.3, 0, 0.0, 0.0, 0.0, 1.0,
+  0.2, 0, 0.0, 0.0, 0.0, 1.0,
+
+  1, 0, 0.0, 0.0, 0.0, 1.0,
+  0.2, 0, 0.0, 0.0, 0.0, 1.0,
+  0.2, 0.1, 0.0, 0.0, 0.0, 1.0,
+
+  0.2, 0.1, 0.0, 0.0, 0.0, 1.0,
+  1, 0, 0.0, 0.0, 0.0, 1.0,
+  1, 0.1, 0.0, 0.0, 0.0, 1.0,
+  
+
+				
+		    ];
+			   //Create a position buffer
+			   this.positionBuffer = gl.createBuffer();
+			   //Bind "ARRAY_BUFFER type to the positionBuffer
+			   gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer);
+					//load the points ---must be done in constructor not render function --- 
+					//last bound buffer is where data is sent
+			   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+			}
+			render(program,primType)
+			{
+				//Now we have to find the attribute position in the program --- think of this as a pointer
+				var positionAttributeLocation = gl.getAttribLocation(program, "a_position");
+				//now we specify HOW TO read our vertices
+				gl.enableVertexAttribArray(positionAttributeLocation);
+				//This will represent a shape. we only want to use buffer data once per shape
+				//three 2d points
+				
+				
+				
+				gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer);
+				//Tell the attribute how to get sata out of positionBuffer (ARRAY_BUFFER)
+				var size = 3; // 3 components per vertice
+				var type = gl.FLOAT; //the data is 32bit floats
+				var normalize = false; //dont normalize the data
+				var stride = 6*Float32Array.BYTES_PER_ELEMENT; //0 = move forward * sizeof (Type) each iteration to get the next position
+				var offset = 0*Float32Array.BYTES_PER_ELEMENT; //start at beginning of buffer
+				//KNOW THIS !!!!!
+				gl.vertexAttribPointer(positionAttributeLocation, size,
+				type, normalize, stride, offset)
+				
+				var colorAttributeLocation = gl.getAttribLocation(program, "a_color");
+				gl.enableVertexAttribArray(colorAttributeLocation);
+				gl.vertexAttribPointer
+				(
+				colorAttributeLocation,
+				3,
+				gl.FLOAT,
+				false,
+				6*Float32Array.BYTES_PER_ELEMENT,
+				3*Float32Array.BYTES_PER_ELEMENT
+				)
+				
+				var primitiveType = primType;
+
+				var offset = 0;
+				var count = 90;
+				//primitiveType should be coming from main
+				gl.drawArrays(primitiveType, offset, count);
+			}
+			
+		}
+		
+		
+		class main
+		{
+			constructor()
+			{
+				this.webGL = new InitWebGLProgram();
+				var vertexShaderSource = document.getElementById('2dVertexShader').text;
+				var fragmentShaderSource = document.getElementById('2dFragmentShader').text;
+				var vertexShader = this.webGL.createShader(gl.VERTEX_SHADER, vertexShaderSource);
+				var fragmentShader = this.webGL.createShader(gl.FRAGMENT_SHADER, fragmentShaderSource);
+				//link to program
+				this.program = this.webGL.createProgram(vertexShader,fragmentShader);
+				this.primType = gl.TRIANGLES;
+				//what program to use
+				gl.useProgram(this.program);
+				this.temp = new Shape();
+				
+				this.temp.render(this.program, this.primType);
+				
+			}
+			
+				
+		}
+
+		
+
+		</script>
+	</Head>
+	<BODY>
+		<HEADER>
+		
+		</HEADER>
+		
+		<CANVAS id="myCanvas" width="640" height="700" style="border: 1px solid black;">
+			Your browser does not support canvas.
+		</CANVAS>
+
+		<FOOTER>
+		
+		</FOOTER>
+		<SCRIPT>
+			var canvas = document.getElementById("myCanvas");
+			var gl = canvas.getContext("webgl");
+			
+			var m = new main();
+			
+			document.getElementById("triangles").addEventListener("click", myFunction);
+			document.getElementById("triangle_strip").addEventListener("click", myFunction1);
+			document.getElementById("triangle_fan").addEventListener("click", myFunction2);
+			function myFunction(){
+				console.log("clicked");
+				m.primType = gl.TRIANGLES;
+				m.temp.render(m.program, m.primType)
+					
+					
+			}
+
+			function myFunction1(){
+				console.log("clicked2");
+				m.primType = gl.TRIANGLE_STRIP;
+				m.temp.render(m.program, m.primType)
+					
+					
+			}
+
+			function myFunction2(){
+				console.log("clicked3");
+				m.primType = gl.TRIANGLE_FAN;
+				m.temp.render(m.program, m.primType)
+					
+					
+			}
+		</SCRIPT>		
+	</BODY>
+</HTML>
+		
+		
